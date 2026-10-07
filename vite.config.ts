@@ -3,7 +3,7 @@ import { defineConfig } from 'vite';
 export default defineConfig(({ mode }) => ({
   // Use base path only in production (for GitHub Pages)
   // In development, Vite serves from root
-  base: mode === 'production' ? '/blackjack/' : '/',
+  base: mode === 'production' ? '/Blackjack/' : '/',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

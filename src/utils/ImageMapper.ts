@@ -6,7 +6,7 @@ export class ImageMapper {
    */
   private static getBasePath(): string {
     // In development, import.meta.env.BASE_URL is '/'
-    // In production with base: '/blackjack/', it's '/blackjack/'
+    // In production with base: '/Blackjack/', it's '/Blackjack/'
     return import.meta.env.BASE_URL;
   }
 

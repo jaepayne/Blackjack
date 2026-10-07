@@ -2,7 +2,7 @@
 
 A single-player blackjack web application that can be embedded via iframe. Built with TypeScript, Vite, and SCSS.
 
-https://jpayne-harper.github.io/blackjack/
+https://jaepayne.github.io/Blackjack/
 
 ## Features
 
@@ -58,7 +58,7 @@ npm test
 ## Project Structure
 
 ```
-blackjack/
+Blackjack/
 ├── src/
 │   ├── types/          # TypeScript type definitions
 │   ├── game/           # Game logic (Deck, Hand, Dealer AI, etc.)
@@ -91,7 +91,7 @@ blackjack/
 
 ```html
 <iframe 
-  src="https://jpayne-harper.github.io/blackjack/" 
+  src="https://jaepayne.github.io/Blackjack/" 
   width="800" 
   height="1000" 
   frameborder="0"
