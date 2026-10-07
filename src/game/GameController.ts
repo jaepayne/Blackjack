@@ -165,13 +165,23 @@ export class GameController {
   }
 
   private checkForBlackjack(): void {
-    if (this.state.playerHand.isBlackjack) {
-      this.state.message = 'Blackjack! Continue playing.';
-      // Don't auto-transition to dealer turn - let player continue
-      // Dealer blackjack will be checked in DEALER_TURN phase
-    } else {
-      this.state.message = 'Your turn';
-    }
+    if (this.resolvePlayerBlackjack()) return;
+    this.state.message = 'Your turn';
+  }
+
+  /**
+   * If the player's main hand is a natural Blackjack, no further player
+   * action is allowed on it: the dealer immediately reveals the hole card
+   * and plays out their hand to settle the result.
+   */
+  private resolvePlayerBlackjack(): boolean {
+    if (!this.state.playerHand.isBlackjack) return false;
+
+    this.state.message = 'Blackjack! Dealer playing...';
+    console.log('current phase: ' + GamePhase.DEALER_TURN);
+    this.state.phase = GamePhase.DEALER_TURN;
+    this.playDealerTurn();
+    return true;
   }
 
   takeInsurance(): void {
@@ -191,12 +201,16 @@ export class GameController {
     this.state.playerHand.setInsuranceBet(insuranceAmount);
     this.state.insuranceTaken = true;
     this.state.insuranceOffered = false; // Hide insurance buttons
+
+    if (this.resolvePlayerBlackjack()) return;
     this.state.message = 'Insurance taken. Your turn';
   }
 
   declineInsurance(): void {
     if (!this.state.insuranceOffered) return;
     this.state.insuranceOffered = false;
+
+    if (this.resolvePlayerBlackjack()) return;
     this.state.message = 'Your turn';
   }
 

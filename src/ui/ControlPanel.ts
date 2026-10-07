@@ -108,10 +108,14 @@ export class ControlPanel {
           this.setButtonState('acceptInsurance', true, playerBalance >= currentBet / 2);
           this.setButtonState('declineInsurance', true, true);
           // All other buttons remain hidden/disabled
+        } else if (activeHand !== 'split' && playerHand.isBlackjack) {
+          // Player was dealt a natural Blackjack: no action buttons.
+          // The dealer plays out automatically and settles the hand.
+          break;
         } else {
           // Get the active hand for split scenarios
           const activeHandObj = (activeHand === 'split' && playerSplitHand) ? playerSplitHand : playerHand;
-          
+
           // Show primary row (Hit, Stand)
           this.primaryRow.style.display = 'flex';
           this.setButtonState('hit', true, activeHandObj.isBusted === false);
