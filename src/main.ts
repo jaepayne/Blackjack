@@ -157,13 +157,22 @@ class BlackjackApp {
 
     switch (action) {
       case 'hit':
-        this.gameController.hit();
+        // Passed a callback because busting into a split's second hand,
+        // or busting with no split, can kick off the dealer's turn -
+        // which now deals itself any extra cards one at a time.
+        this.gameController.hit(() => {
+          this.updateUI();
+        });
         break;
       case 'stand':
-        this.gameController.stand();
+        this.gameController.stand(() => {
+          this.updateUI();
+        });
         break;
       case 'double':
-        this.gameController.doubleDown();
+        this.gameController.doubleDown(() => {
+          this.updateUI();
+        });
         break;
       case 'split':
         // Clear dealt cards on both hands before split
@@ -179,10 +188,16 @@ class BlackjackApp {
         this.updateUI();
         break;
       case 'acceptInsurance':
-        this.gameController.takeInsurance();
+        // A Blackjack revealed right after taking insurance also kicks
+        // off the dealer's turn, same as hit/stand/double.
+        this.gameController.takeInsurance(() => {
+          this.updateUI();
+        });
         break;
       case 'declineInsurance':
-        this.gameController.declineInsurance();
+        this.gameController.declineInsurance(() => {
+          this.updateUI();
+        });
         break;
       case 'surrender':
         this.gameController.surrender();

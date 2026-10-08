@@ -36,21 +36,5 @@ export class DealerAI {
     // 18 or higher, stand
     return false;
   }
-
-  /**
-   * Play dealer's turn automatically
-   * Returns array of cards after dealer finishes
-   */
-  static playTurn(dealerCards: Card[], dealCard: () => Card | null): Card[] {
-    const cards = [...dealerCards];
-
-    while (this.shouldHit(cards)) {
-      const newCard = dealCard();
-      if (!newCard) break;
-      cards.push(newCard);
-    }
-
-    return cards;
-  }
 }
 
