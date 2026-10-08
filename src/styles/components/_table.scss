@@ -67,13 +67,28 @@ body {
 
 .game-status {
   text-align: center;
-  padding: $spacing-md;
-  margin: $spacing-md 0;
+  padding: $spacing-sm $spacing-lg;
+  margin: $spacing-md auto;
   font-size: 1.3rem;
   font-weight: bold;
   color: $text-light;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   min-height: 2rem;
+  // A colored message (success green especially) can blend into the
+  // photographed felt background depending on where its lighter/darker
+  // patches fall, no matter how the text color itself is tuned. A solid
+  // backing plate - the same treatment the balance/bet boxes already use -
+  // keeps every message readable regardless of what's behind it.
+  background-color: rgba(0, 31, 63, 0.75);
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  width: fit-content;
+  max-width: 90%;
+
+  &:empty {
+    background-color: transparent;
+    border-color: transparent;
+  }
 
   &.info {
     color: $text-light;
@@ -81,14 +96,17 @@ body {
 
   &.success {
     color: $success-color;
+    border-color: $success-color;
   }
 
   &.error {
     color: $error-color;
+    border-color: $error-color;
   }
 
   &.warning {
     color: $warning-color;
+    border-color: $warning-color;
   }
 }
 
