@@ -60,50 +60,39 @@ export class HandComponent {
       }
       // Player cards are always face-up (isFaceDown remains false)
       
-      // Check if this card index has already been dealt
-      const isAlreadyDealt = this.dealtCardIndices.has(index);
-      
-      // Check if we have an existing card element at this index
+      // Check if we have an existing card element at this index. Every
+      // state update re-renders BOTH hands (player and dealer) regardless
+      // of which one actually received a new card, so this fires far more
+      // often than once per card. A card that already exists in the DOM -
+      // whether its deal animation has finished or is still mid-flight -
+      // must never be removed and recreated, or its animation restarts
+      // from the beginning every time the other hand gets a card.
       const existingCard = existingCards[index];
-      const hasExistingDealtClass = existingCard?.classList.contains('dealt');
-      
-      // If card already has 'dealt' class, update it without re-animating
-      if (isAlreadyDealt || hasExistingDealtClass) {
-        // Card already dealt, just update it without animation
-        if (existingCard) {
-          // Always update the card image to ensure it matches the current card object
-          const expectedImage = isFaceDown 
-            ? ImageMapper.getCardBackPath()
-            : ImageMapper.getCardImagePath(card);
-          const currentImage = existingCard.style.backgroundImage;
-          const expectedImageUrl = `url(${expectedImage})`;
-          
-          // Update image if it doesn't match (handles card changes after split)
-          if (currentImage !== expectedImageUrl) {
-            existingCard.style.backgroundImage = expectedImageUrl;
-          }
-          
-          // Update face-down/face-up state if needed
-          if (isFaceDown && !existingCard.classList.contains('face-down')) {
-            existingCard.classList.remove('face-up');
-            existingCard.classList.add('face-down');
-            existingCard.style.backgroundImage = `url(${ImageMapper.getCardBackPath()})`;
-          } else if (!isFaceDown && !existingCard.classList.contains('face-up')) {
-            existingCard.classList.remove('face-down');
-            existingCard.classList.add('face-up');
-            existingCard.style.backgroundImage = `url(${ImageMapper.getCardImagePath(card)})`;
-          }
-          // Ensure 'dealt' class is present and 'dealing' is not
-          existingCard.classList.add('dealt');
-          existingCard.classList.remove('dealing');
-        } else {
-          // Create card without animation since it's already dealt
-          const cardComponent = new CardComponent(card, isFaceDown, -1); // -1 means no animation
-          const cardElement = cardComponent.getElement();
-          cardElement.classList.add('dealt');
-          this.cardsContainer.appendChild(cardElement);
+
+      if (existingCard) {
+        // Card already rendered, just keep it in sync without re-animating.
+        const expectedImage = isFaceDown
+          ? ImageMapper.getCardBackPath()
+          : ImageMapper.getCardImagePath(card);
+        const currentImage = existingCard.style.backgroundImage;
+        const expectedImageUrl = `url(${expectedImage})`;
+
+        // Update image if it doesn't match (handles card changes after split)
+        if (currentImage !== expectedImageUrl) {
+          existingCard.style.backgroundImage = expectedImageUrl;
         }
-        return; // Skip animation for already-dealt cards
+
+        // Update face-down/face-up state if needed
+        if (isFaceDown && !existingCard.classList.contains('face-down')) {
+          existingCard.classList.remove('face-up');
+          existingCard.classList.add('face-down');
+          existingCard.style.backgroundImage = `url(${ImageMapper.getCardBackPath()})`;
+        } else if (!isFaceDown && !existingCard.classList.contains('face-up')) {
+          existingCard.classList.remove('face-down');
+          existingCard.classList.add('face-up');
+          existingCard.style.backgroundImage = `url(${ImageMapper.getCardImagePath(card)})`;
+        }
+        return; // Never touch 'dealing'/'dealt' here - its own timer owns that
       }
       
       // Calculate delay: for initial deal, alternate player/dealer (0ms, 200ms, 400ms, 600ms)
@@ -114,11 +103,6 @@ export class HandComponent {
       let delay = 0;
       if (isInitialDeal) {
         delay = startDelay + (index * 400); // Player: 0ms, 400ms | Dealer: 200ms, 600ms
-      }
-      
-      // Remove existing card at this index if it exists (shouldn't happen, but safety check)
-      if (existingCard && !hasExistingDealtClass) {
-        existingCard.remove();
       }
       
       // Create new card with animation

@@ -184,6 +184,27 @@ export class GameController {
     return true;
   }
 
+  /**
+   * Switches control to the split hand once the main hand is done.
+   * If the split hand is itself a natural Blackjack (possible the
+   * instant split() deals its second card), there is nothing for the
+   * player to act on - it auto-stands just like a pre-split Blackjack -
+   * so the dealer plays immediately instead of offering Hit/Stand on it.
+   */
+  private activateSplitHandOrProceedToDealer(message: string): void {
+    this.state.activeHand = 'split';
+
+    if (this.state.playerSplitHand?.isBlackjack) {
+      this.state.message = 'Second hand: Blackjack! Dealer playing...';
+      console.log('current phase: ' + GamePhase.DEALER_TURN);
+      this.state.phase = GamePhase.DEALER_TURN;
+      this.playDealerTurn();
+      return;
+    }
+
+    this.state.message = message;
+  }
+
   takeInsurance(): void {
     if (!this.state.insuranceOffered || this.state.insuranceTaken) {
       return;
@@ -234,8 +255,7 @@ export class GameController {
       if (this.state.activeHand === 'main' && this.state.playerSplitHand) {
         // Main hand busted, switch to split hand
         this.state.mainHandComplete = true;
-        this.state.activeHand = 'split';
-        this.state.message = 'First hand busted. Playing second hand.';
+        this.activateSplitHandOrProceedToDealer('First hand busted. Playing second hand.');
       } else {
         // Current hand busted, check if we can continue with other hand
         if (this.state.playerSplitHand && this.state.activeHand === 'main') {
@@ -264,8 +284,7 @@ export class GameController {
       
       // If split hand exists, switch to it
       if (this.state.playerSplitHand) {
-        this.state.activeHand = 'split';
-        this.state.message = 'First hand complete. Playing second hand.';
+        this.activateSplitHandOrProceedToDealer('First hand complete. Playing second hand.');
         return;
       }
     }
@@ -307,8 +326,7 @@ export class GameController {
       
       // If split hand exists and main hand not busted, switch to split
       if (this.state.playerSplitHand && !activeHand.isBusted) {
-        this.state.activeHand = 'split';
-        this.state.message = 'First hand doubled. Playing second hand.';
+        this.activateSplitHandOrProceedToDealer('First hand doubled. Playing second hand.');
         return;
       }
     }
@@ -317,8 +335,7 @@ export class GameController {
       // Check if we can continue with other hand
       if (this.state.playerSplitHand && this.state.activeHand === 'main') {
         this.state.mainHandComplete = true;
-        this.state.activeHand = 'split';
-        this.state.message = 'First hand busted. Playing second hand.';
+        this.activateSplitHandOrProceedToDealer('First hand busted. Playing second hand.');
       } else {
         this.state.message = 'Bust! You lose.';
         this.state.phase = GamePhase.RESULT;
@@ -408,6 +425,16 @@ export class GameController {
 
     // Both hands are now dealt - action buttons can return.
     this.state.phase = GamePhase.PLAYER_TURN;
+
+    // A post-split hand can land a natural Blackjack on its very first
+    // two cards (e.g. split Aces, draw a ten). Just like a pre-split
+    // Blackjack, the player can't act on it - it auto-stands - but here
+    // play still continues to whichever hand remains live rather than
+    // settling immediately, since the other hand hasn't been played yet.
+    if (this.state.playerHand.isBlackjack) {
+      this.state.mainHandComplete = true;
+      this.activateSplitHandOrProceedToDealer('First hand: Blackjack! Playing second hand.');
+    }
 
     // Final UI update after both cards are dealt
     if (onStateUpdate) {
