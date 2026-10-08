@@ -2,6 +2,11 @@ import { Hand } from '../game/Hand';
 import { CardComponent } from './CardComponent';
 import { ImageMapper } from '../utils/ImageMapper';
 
+// Must match the `dealCard` keyframe duration in _card.scss (0.8s).
+// If these drift apart, the 'dealing' class gets removed before the CSS
+// animation finishes, snapping the card to its resting position early.
+const CARD_DEAL_ANIMATION_MS = 800;
+
 export class HandComponent {
   private container: HTMLDivElement;
   private valueDisplay: HTMLDivElement;
@@ -122,7 +127,7 @@ export class HandComponent {
       this.cardsContainer.appendChild(cardElement);
       
       // Mark this index as dealt and remove 'dealing' class after animation completes
-      const totalDelay = delay + 500; // Animation duration is 500ms
+      const totalDelay = delay + CARD_DEAL_ANIMATION_MS;
       setTimeout(() => {
         cardElement.classList.remove('dealing');
         cardElement.classList.add('dealt');

@@ -350,6 +350,13 @@ export class GameController {
 
     this.state.playerBalance -= additionalBet;
 
+    // Hide all player action buttons for the duration of the split deal -
+    // the player shouldn't be able to act until both hands have their
+    // second card. GamePhase.DEALING already renders with no action
+    // buttons (same as the initial deal), so reuse it here and restore
+    // PLAYER_TURN only once the sequence below fully completes.
+    this.state.phase = GamePhase.DEALING;
+
     // Create split hand - explicitly remove the second card (index 1)
     // This ensures the card is properly removed from the main hand
     const splitCard = this.state.playerHand.cards.splice(1, 1)[0];
@@ -362,15 +369,20 @@ export class GameController {
       onStateUpdate();
     }
 
+    // Pause so the split itself reads as its own beat before the next
+    // card is dealt, instead of happening in the same instant.
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     // Deal first card to main hand
     const card1 = this.deckManager.dealCard();
     if (!card1) {
       this.state.message = 'Error: Unable to deal card';
+      this.state.phase = GamePhase.PLAYER_TURN;
       return;
     }
 
     this.state.playerHand.addCard(card1);
-    
+
     // Update UI after first card is dealt
     if (onStateUpdate) {
       onStateUpdate();
@@ -383,6 +395,7 @@ export class GameController {
     const card2 = this.deckManager.dealCard();
     if (!card2) {
       this.state.message = 'Error: Unable to deal card';
+      this.state.phase = GamePhase.PLAYER_TURN;
       return;
     }
 
@@ -392,6 +405,9 @@ export class GameController {
     this.state.activeHand = 'main';
     this.state.mainHandComplete = false;
     this.state.message = 'Playing first hand';
+
+    // Both hands are now dealt - action buttons can return.
+    this.state.phase = GamePhase.PLAYER_TURN;
 
     // Final UI update after both cards are dealt
     if (onStateUpdate) {

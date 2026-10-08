@@ -13,6 +13,20 @@
   &.player-hand {
     margin-top: $spacing-xl;
   }
+
+  // Marks which hand is currently being played after a split. Without
+  // this, main.ts still toggles the class but nothing renders it.
+  &.active-hand {
+    .cards {
+      padding: $spacing-sm;
+      border-radius: 12px;
+      box-shadow: 0 0 0 3px $secondary-color, 0 0 18px rgba(255, 215, 0, 0.5);
+    }
+
+    .hand-value {
+      color: $secondary-color;
+    }
+  }
 }
 
 .cards {

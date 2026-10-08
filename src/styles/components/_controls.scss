@@ -30,6 +30,13 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
 
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
   &.btn-primary {
     @include button-primary;
   }
@@ -44,13 +51,13 @@
     border: 2px solid transparent;
     transition: all $transition-fast;
 
-    &:hover {
+    &:hover:not(:disabled) {
       background-color: color.adjust(#dbbe01, $lightness: -10%);
       transform: translateY(-2px);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
 
-    &:active {
+    &:active:not(:disabled) {
       border: 3px solid rgba(219, 190, 1, 0.6);
       transform: translateY(0);
     }
@@ -62,13 +69,13 @@
     border: 2px solid transparent;
     transition: all $transition-fast;
 
-    &:hover {
+    &:hover:not(:disabled) {
       background-color: color.adjust(#29b100, $lightness: -10%);
       transform: translateY(-2px);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
 
-    &:active {
+    &:active:not(:disabled) {
       border: 3px solid rgba(41, 177, 0, 0.6);
       transform: translateY(0);
     }
@@ -80,13 +87,13 @@
     border: 2px solid transparent;
     transition: all $transition-fast;
 
-    &:hover {
+    &:hover:not(:disabled) {
       background-color: color.adjust(#bc1409, $lightness: -10%);
       transform: translateY(-2px);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
 
-    &:active {
+    &:active:not(:disabled) {
       border: 3px solid rgba(188, 20, 9, 0.6);
       transform: translateY(0);
     }
