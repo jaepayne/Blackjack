@@ -186,5 +186,27 @@ describe('HandEvaluator', () => {
       expect(HandEvaluator.canDoubleDown(cards)).toBe(false);
     });
   });
+
+  describe('dealerShowsAce', () => {
+    it('should offer insurance when the face-up card (index 0) is an Ace', () => {
+      const dealerCards: Card[] = [
+        { suit: Suit.HEARTS, rank: Rank.ACE, value: 11, imagePath: '' },
+        { suit: Suit.CLUBS, rank: Rank.TEN, value: 10, imagePath: '' }
+      ];
+      expect(HandEvaluator.dealerShowsAce(dealerCards)).toBe(true);
+    });
+
+    it('should not offer insurance when only the hidden hole card (index 1) is an Ace', () => {
+      const dealerCards: Card[] = [
+        { suit: Suit.SPADES, rank: Rank.THREE, value: 3, imagePath: '' },
+        { suit: Suit.HEARTS, rank: Rank.ACE, value: 11, imagePath: '' }
+      ];
+      expect(HandEvaluator.dealerShowsAce(dealerCards)).toBe(false);
+    });
+
+    it('should return false when the dealer has no cards', () => {
+      expect(HandEvaluator.dealerShowsAce([])).toBe(false);
+    });
+  });
 });
 

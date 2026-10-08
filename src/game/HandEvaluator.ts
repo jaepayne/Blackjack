@@ -104,8 +104,10 @@ export class HandEvaluator {
    */
   static dealerShowsAce(dealerCards: Card[]): boolean {
     if (dealerCards.length === 0) return false;
-    // Only check the face-up card (second card, index 1)
-    return dealerCards[1].rank === Rank.ACE;
+    // Only check the face-up card (first card, index 0).
+    // The hole card (index 1, face-down) must never be used here -
+    // insurance is offered based on what the player can see.
+    return dealerCards[0].rank === Rank.ACE;
   }
 }
 
