@@ -570,6 +570,15 @@ export class GameController {
       this.state.message = 'Hand complete';
     }
 
+    // Insurance only pays out when the dealer has Blackjack, which is
+    // handled separately above (and returns before reaching here). So if
+    // insurance was taken and we got this far, it was lost - regardless
+    // of how the main hand turns out - and that shouldn't go unmentioned
+    // just because the hand itself won.
+    if (this.state.insuranceTaken) {
+      this.state.message += ' | Insurance lost';
+    }
+
     console.log('current phase: ' + GamePhase.RESULT);
     this.state.phase = GamePhase.RESULT;
     this.endHand();
