@@ -109,6 +109,9 @@ export class GameController {
     this.state.insuranceTaken = false;
     this.state.activeHand = 'main';
     this.state.mainHandComplete = false;
+    // Clear the previous hand's result message right away instead of
+    // leaving it on screen for the whole ~2s dealing animation.
+    this.state.message = '';
 
     // Define the dealing order: [playerIndex, dealerIndex, playerIndex, dealerIndex, ...]
     // For future expansion: could be [player1, player2, dealer, player1, player2, dealer]
