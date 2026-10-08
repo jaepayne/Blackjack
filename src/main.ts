@@ -351,9 +351,12 @@ class BlackjackApp {
     switch (phase) {
       case GamePhase.RESULT:
         const state = this.gameController.getState();
-        if (state.message.includes('win') || state.message.includes('Blackjack')) {
+        // Match specific phrases rather than bare substrings like 'win' or
+        // 'Blackjack' - those also appear in losing outcomes such as
+        // "Dealer has blackjack. Dealer wins." which should read as a loss.
+        if (state.message.includes('You win') || state.message.includes('Insurance pays')) {
           return 'success';
-        } else if (state.message.includes('lose') || state.message.includes('Bust')) {
+        } else if (state.message.includes('Dealer wins') || state.message.includes('lose') || state.message.includes('Bust')) {
           return 'error';
         }
         return 'info';

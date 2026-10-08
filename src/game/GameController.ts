@@ -456,10 +456,16 @@ export class GameController {
     let totalPayout = 0;
     const results: string[] = [];
 
+    // "First hand" / "Second hand" labels only make sense once the player
+    // has actually split - otherwise there is only one hand, so the
+    // result should read plainly (e.g. "Dealer wins", not "First hand:
+    // Dealer wins").
+    const hasSplit = !!this.state.playerSplitHand;
+
     // Handle surrender (only applies to main hand)
     if (this.state.playerHand.isSurrendered) {
       this.state.playerBalance += this.state.currentBet / 2; // Return half bet
-      results.push('First hand surrendered');
+      results.push(hasSplit ? 'First hand surrendered' : 'Hand surrendered');
       console.log('current phase: ' + GamePhase.RESULT);
       this.state.phase = GamePhase.RESULT;
       this.endHand();
@@ -479,10 +485,10 @@ export class GameController {
       );
       totalPayout += mainPayout.payout;
       if (mainPayout.message) {
-        results.push(`First hand: ${mainPayout.message}`);
+        results.push(hasSplit ? `First hand: ${mainPayout.message}` : mainPayout.message);
       }
     } else {
-      results.push('First hand: Bust');
+      results.push(hasSplit ? 'First hand: Bust' : 'Bust');
     }
 
     // Calculate result for split hand if it exists
