@@ -4,6 +4,13 @@ import { HandEvaluator } from './HandEvaluator';
 import { DealerAI } from './DealerAI';
 import { Hand } from './Hand';
 
+// How long to wait before dealing each card the dealer draws to their own
+// hand: the card's own deal animation (800ms, see HandComponent's
+// CARD_DEAL_ANIMATION_MS) plus a brief pause, so when the dealer needs
+// multiple hits, each one fully lands before the next starts instead of
+// all of them animating at once.
+const DEALER_HIT_PACING_MS = 1200;
+
 export class GameController {
   private state: GameState;
   private deckManager: DeckManager;
@@ -158,7 +165,7 @@ export class GameController {
     } else {
       console.log('current phase: ' + GamePhase.PLAYER_TURN);
       this.state.phase = GamePhase.PLAYER_TURN;
-      this.checkForBlackjack();
+      this.checkForBlackjack(onStateUpdate);
     }
     
     // Final UI update after dealing is complete
@@ -167,8 +174,8 @@ export class GameController {
     }
   }
 
-  private checkForBlackjack(): void {
-    if (this.resolvePlayerBlackjack()) return;
+  private checkForBlackjack(onStateUpdate?: () => void): void {
+    if (this.resolvePlayerBlackjack(onStateUpdate)) return;
     this.state.message = 'Your turn';
   }
 
@@ -177,13 +184,13 @@ export class GameController {
    * action is allowed on it: the dealer immediately reveals the hole card
    * and plays out their hand to settle the result.
    */
-  private resolvePlayerBlackjack(): boolean {
+  private resolvePlayerBlackjack(onStateUpdate?: () => void): boolean {
     if (!this.state.playerHand.isBlackjack) return false;
 
     this.state.message = 'Blackjack! Dealer playing...';
     console.log('current phase: ' + GamePhase.DEALER_TURN);
     this.state.phase = GamePhase.DEALER_TURN;
-    this.playDealerTurn();
+    void this.playDealerTurn(onStateUpdate);
     return true;
   }
 
@@ -194,21 +201,21 @@ export class GameController {
    * player to act on - it auto-stands just like a pre-split Blackjack -
    * so the dealer plays immediately instead of offering Hit/Stand on it.
    */
-  private activateSplitHandOrProceedToDealer(message: string): void {
+  private activateSplitHandOrProceedToDealer(message: string, onStateUpdate?: () => void): void {
     this.state.activeHand = 'split';
 
     if (this.state.playerSplitHand?.isBlackjack) {
       this.state.message = 'Second hand: Blackjack! Dealer playing...';
       console.log('current phase: ' + GamePhase.DEALER_TURN);
       this.state.phase = GamePhase.DEALER_TURN;
-      this.playDealerTurn();
+      void this.playDealerTurn(onStateUpdate);
       return;
     }
 
     this.state.message = message;
   }
 
-  takeInsurance(): void {
+  takeInsurance(onStateUpdate?: () => void): void {
     if (!this.state.insuranceOffered || this.state.insuranceTaken) {
       return;
     }
@@ -226,19 +233,19 @@ export class GameController {
     this.state.insuranceTaken = true;
     this.state.insuranceOffered = false; // Hide insurance buttons
 
-    if (this.resolvePlayerBlackjack()) return;
+    if (this.resolvePlayerBlackjack(onStateUpdate)) return;
     this.state.message = 'Insurance taken. Your turn';
   }
 
-  declineInsurance(): void {
+  declineInsurance(onStateUpdate?: () => void): void {
     if (!this.state.insuranceOffered) return;
     this.state.insuranceOffered = false;
 
-    if (this.resolvePlayerBlackjack()) return;
+    if (this.resolvePlayerBlackjack(onStateUpdate)) return;
     this.state.message = 'Your turn';
   }
 
-  hit(): void {
+  hit(onStateUpdate?: () => void): void {
     if (this.state.phase !== GamePhase.PLAYER_TURN) return;
 
     const card = this.deckManager.dealCard();
@@ -258,7 +265,7 @@ export class GameController {
       if (this.state.activeHand === 'main' && this.state.playerSplitHand) {
         // Main hand busted, switch to split hand
         this.state.mainHandComplete = true;
-        this.activateSplitHandOrProceedToDealer('First hand busted. Playing second hand.');
+        this.activateSplitHandOrProceedToDealer('First hand busted. Playing second hand.', onStateUpdate);
       } else {
         // Current hand busted, check if we can continue with other hand
         if (this.state.playerSplitHand && this.state.activeHand === 'main') {
@@ -278,16 +285,16 @@ export class GameController {
     }
   }
 
-  stand(): void {
+  stand(onStateUpdate?: () => void): void {
     if (this.state.phase !== GamePhase.PLAYER_TURN) return;
 
     // Mark current hand as complete
     if (this.state.activeHand === 'main') {
       this.state.mainHandComplete = true;
-      
+
       // If split hand exists, switch to it
       if (this.state.playerSplitHand) {
-        this.activateSplitHandOrProceedToDealer('First hand complete. Playing second hand.');
+        this.activateSplitHandOrProceedToDealer('First hand complete. Playing second hand.', onStateUpdate);
         return;
       }
     }
@@ -295,10 +302,10 @@ export class GameController {
     // Both hands complete, proceed to dealer turn
     console.log('current phase: ' + GamePhase.DEALER_TURN);
     this.state.phase = GamePhase.DEALER_TURN;
-    this.playDealerTurn();
+    void this.playDealerTurn(onStateUpdate);
   }
 
-  doubleDown(): void {
+  doubleDown(onStateUpdate?: () => void): void {
     if (this.state.phase !== GamePhase.PLAYER_TURN) return;
 
     // Get the active hand
@@ -326,10 +333,10 @@ export class GameController {
     // Mark current hand as complete (double down ends the hand)
     if (this.state.activeHand === 'main') {
       this.state.mainHandComplete = true;
-      
+
       // If split hand exists and main hand not busted, switch to split
       if (this.state.playerSplitHand && !activeHand.isBusted) {
-        this.activateSplitHandOrProceedToDealer('First hand doubled. Playing second hand.');
+        this.activateSplitHandOrProceedToDealer('First hand doubled. Playing second hand.', onStateUpdate);
         return;
       }
     }
@@ -338,7 +345,7 @@ export class GameController {
       // Check if we can continue with other hand
       if (this.state.playerSplitHand && this.state.activeHand === 'main') {
         this.state.mainHandComplete = true;
-        this.activateSplitHandOrProceedToDealer('First hand busted. Playing second hand.');
+        this.activateSplitHandOrProceedToDealer('First hand busted. Playing second hand.', onStateUpdate);
       } else {
         this.state.message = 'Bust! You lose.';
         this.state.phase = GamePhase.RESULT;
@@ -353,7 +360,7 @@ export class GameController {
         // Both hands complete, proceed to dealer turn
         console.log('current phase: ' + GamePhase.DEALER_TURN);
         this.state.phase = GamePhase.DEALER_TURN;
-        this.playDealerTurn();
+        void this.playDealerTurn(onStateUpdate);
       }
     }
   }
@@ -436,7 +443,7 @@ export class GameController {
     // settling immediately, since the other hand hasn't been played yet.
     if (this.state.playerHand.isBlackjack) {
       this.state.mainHandComplete = true;
-      this.activateSplitHandOrProceedToDealer('First hand: Blackjack! Playing second hand.');
+      this.activateSplitHandOrProceedToDealer('First hand: Blackjack! Playing second hand.', onStateUpdate);
     }
 
     // Final UI update after both cards are dealt
@@ -457,15 +464,31 @@ export class GameController {
     this.endHand();
   }
 
-  private playDealerTurn(): void {
-    // Reveal dealer's hidden card
-    const dealerCards = DealerAI.playTurn(
-      this.state.dealerHand.cards,
-      () => this.deckManager.dealCard() || null
-    );
+  private async playDealerTurn(onStateUpdate?: () => void): Promise<void> {
+    // Reveal dealer's hidden card. It's already in the DOM face-down, so
+    // the phase change to DEALER_TURN is enough to flip it in place - no
+    // new card animation is involved in the reveal itself.
+    if (onStateUpdate) {
+      onStateUpdate();
+    }
 
-    this.state.dealerHand = new Hand(0);
-    dealerCards.forEach(card => this.state.dealerHand.addCard(card));
+    // Deal any further cards the dealer needs one at a time, so each
+    // card's own deal animation fully finishes (plus a brief pause)
+    // before the next one starts. Previously the whole final hand was
+    // computed synchronously and dumped into state in one go, so when
+    // the dealer needed multiple hits they all appeared and animated at
+    // the exact same instant.
+    while (DealerAI.shouldHit(this.state.dealerHand.cards)) {
+      await new Promise(resolve => setTimeout(resolve, DEALER_HIT_PACING_MS));
+
+      const card = this.deckManager.dealCard();
+      if (!card) break;
+      this.state.dealerHand.addCard(card);
+
+      if (onStateUpdate) {
+        onStateUpdate();
+      }
+    }
 
     // Handle insurance payout after dealer reveals card
     if (this.state.insuranceTaken && this.state.playerHand.insuranceBet) {
@@ -479,6 +502,10 @@ export class GameController {
     }
 
     this.determineResult();
+
+    if (onStateUpdate) {
+      onStateUpdate();
+    }
   }
 
   private determineResult(): void {
