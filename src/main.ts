@@ -219,9 +219,11 @@ class BlackjackApp {
         break;
     }
 
-    // Note: We don't call updateUI() here anymore for betAndDealAgain
-    // because it's handled by the callback
-    if (action !== 'betAndDealAgain') {
+    // Note: We don't call updateUI() here anymore for betAndDealAgain or
+    // split because each already renders its own steps via callback -
+    // an extra render here would redundantly repaint the same in-progress
+    // state before the async sequence has finished.
+    if (action !== 'betAndDealAgain' && action !== 'split') {
       this.updateUI();
     }
   }
