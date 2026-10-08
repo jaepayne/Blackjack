@@ -109,6 +109,9 @@ export class GameController {
     this.state.insuranceTaken = false;
     this.state.activeHand = 'main';
     this.state.mainHandComplete = false;
+    // Clear the previous hand's result message right away instead of
+    // leaving it on screen for the whole ~2s dealing animation.
+    this.state.message = '';
 
     // Define the dealing order: [playerIndex, dealerIndex, playerIndex, dealerIndex, ...]
     // For future expansion: could be [player1, player2, dealer, player1, player2, dealer]
@@ -565,6 +568,15 @@ export class GameController {
       this.state.message = results.join(' | ');
     } else {
       this.state.message = 'Hand complete';
+    }
+
+    // Insurance only pays out when the dealer has Blackjack, which is
+    // handled separately above (and returns before reaching here). So if
+    // insurance was taken and we got this far, it was lost - regardless
+    // of how the main hand turns out - and that shouldn't go unmentioned
+    // just because the hand itself won.
+    if (this.state.insuranceTaken) {
+      this.state.message += ' | Insurance lost';
     }
 
     console.log('current phase: ' + GamePhase.RESULT);
